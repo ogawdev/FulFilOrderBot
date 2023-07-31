@@ -1,32 +1,42 @@
 const { Scenes } = require("telegraf");
 const { User } = require("../database/index");
 const path = require("path");
-const config = require("../utils/config");
+const {CHAT_ID} = require("../utils/config");
 
 const scene = new Scenes.WizardScene(
     "register",
     async (ctx) => {
-        console.log(ctx.message)
-        ctx.wizard.state.full_name
-        ctx.wizard.next();
-    },
-    async (ctx) => {
-        if (ctx.message?.text === "/start") {
-            ctx.wizard.step(0);
-            return
-        }
-
-        ctx.wizard.state.full_name = ctx.message.text
-
-        await ctx.reply("Siz bilan bog'lana olishimiz uchun telefon raqamingizni (901234567) ko'rinishida qoldiring");
-
-        ctx.wizard.next();
+       try {
+           await ctx.reply("Assalomu alaykum ro'yxatdan o'tish uchun ism-familyangizni qoldiring");
+           ctx.wizard.state.user = {};
+           ctx.wizard.next();
+       } catch (e) {
+           console.log(e + "");
+       }
     },
     async (ctx) => {
         try {
             if (ctx.message?.text === "/start") {
-                ctx.wizard.step(0);
-                return
+                ctx.wizard.restart
+                ctx.scene.enter("register");
+                return;
+            }
+
+            ctx.wizard.state.user.full_name = ctx.message.text
+
+            await ctx.reply("Siz bilan bog'lana olishimiz uchun telefon raqamingizni (901234567) ko'rinishida qoldiring");
+
+            ctx.wizard.next();
+        } catch (e) {
+            console.log(e + "")
+        }
+    },
+    async (ctx) => {
+        try {
+            if (ctx.message?.text === "/start") {
+                ctx.wizard.restart
+                ctx.scene.enter("register");
+                return;
             }
 
             if (!(ctx.message.text.length === 9 && !isNaN(Number(ctx.message.text)))) {
@@ -38,13 +48,15 @@ const scene = new Scenes.WizardScene(
 
             await User.create({
                 userId: ctx.message.from.id,
-                fullName: ctx.wizard.state.full_name,
+                fullName: ctx.wizard.state.user.full_name,
                 phone: ctx.message.text,
             });
 
+            ctx.wizard.state.user.phone = ctx.message.text;
+
             await ctx.replyWithPhoto({source: path.join(__dirname, "../../img.png"), }, { caption: "\"Python, Backend — Dasturlash\" onlayn kursining ta'riflari bilan tanishing" });
 
-            await ctx.reply(`${ctx.wizard.state.full_name} endi to'lov qismiga o'tamiz.
+            await ctx.reply(`${ctx.wizard.state.user.full_name} endi to'lov qismiga o'tamiz.
 
 Mahalliy karta raqamimiz: 
 9860160101227298 — Humo
@@ -69,16 +81,15 @@ Agar sizda qo'shimcha savollar bo'lsa bizga albatta bog'laning: 990882745`)
     async (ctx) => {
         try {
             if (ctx.message?.text === "/start") {
-                ctx.wizard.step(0);
-                return
+                ctx.wizard.restart
+                ctx.scene.enter("register");
+                return;
             }
 
             if (ctx.message?.photo) {
-                let user = await User.findOne({ userId: ctx.message.from.id })
+                await ctx.telegram.sendPhoto(CHAT_ID, ctx.message.photo[ctx.message.photo.length - 1].file_id, { caption: `FISH: ${ctx.wizard.state.user.full_name}\nTel: ${ctx.wizard.state.user.phone}\nUser_id: ${ctx.message.from.id}` });
 
-                await ctx.telegram.sendPhoto(-866735516, ctx.message.photo[ctx.message.photo.length - 1].file_id, { caption: `FISH: ${user.fullName}\nTel: ${user.phone}\nUser_id: ${user.userId}` });
-
-                await ctx.reply("Xabaringiz muvofaqqiyatli yuborildi. Tez orada siz bilan bog'lanamiz✅")
+                await ctx.reply("Xabaringiz muvofaqqiyatli yuborildi✅\nTez orada siz bilan bog'lanamiz")
             } else {
                 await ctx.reply("Faqat rasm yuboring❌");
                 return

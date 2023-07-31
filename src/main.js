@@ -16,9 +16,11 @@ const {join} = require("path");
 
 
 bot.use(session());
+
 bot.use(stage.middleware());
 
-bot.start((ctx) => ctx.chat.type === "private" && ctx.scene.enter("start"));
+bot.start((ctx) => ctx.chat.type === "private" && ctx.scene.enter("register"));
+
 
 bot.command("excel", async (ctx) => {
     try {
