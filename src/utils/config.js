@@ -1,11 +1,11 @@
 const config = {
   NODE_ENV: process.env.NODE_ENV || "development",
   BOT_TOKEN: process.env.BOT_TOKEN,
-  REDIS_HOST: process.env.REDIS_HOST,
-  REDIS_PORT: process.env.REDIS_PORT,
-  SESSION_TYPE: process.env.SESSION_TYPE,
   DOMAIN: process.env.DOMAIN,
   PORT: process.env.PORT,
+  DB_URI: process.env.DB_URI,
+  CHAT_ID: process.env.CHAT_ID,
+  DEV_ID: process.env.DEV_ID,
 };
 
 module.exports = config;
